@@ -72,8 +72,8 @@ public class Cafe
 		}
 		else
 		{
-			UpdateWarehouse(name, int(this.money / price));
-			this.money -= int(this.money / price) * price
+			UpdateWarehouse(name, (int)(this.money / price);
+			this.money -= (int)(this.money / price) * price
 			//надо бы вывести соообщение что недостачно средств для покупки всех но я хз как лучше это сделать
 
 		}
