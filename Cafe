@@ -7,14 +7,14 @@ public class Recipes
 
 	int price;
 	int preparation_time;
-	Dictionary<string, int> ingredients;
-	public Recipes (int pr, int prep_tm, List<KeyValuePair<string, int>> ingr)
+	List <string> ingredients;
+	public Recipes (int pr, int prep_tm, List<string> ingr)
 	{	//конструктор класса
 		this.price = pr;
 		this.preparation_time = prep_tm;
-		foreach(KeyValuePair<string, int> ingredient in ingr)
+		foreach(string ingredient in ingr)
 		{
-			this.ingredients.Add(ingredient.Key, ingredient.Value);
+			this.ingredients.Add(ingredient);
 		}
 	}
 }
@@ -29,7 +29,7 @@ public class Cafe
 	Dictionary<string, Recipes> recipes;
 	Dictionary<string, int> warehouse;
 	Dictionary<string, int> shop;
-	public Cafe(int min_t, int max_t, int mon, List<KeyValuePair<string, Recipes>> recipes_1, List<KeyValuePair<string, int>> sclad, List<KeyValuePair<string, int>> sh)
+	public Cafe(int min_t, int max_t, int mon, List<KeyValuePair<string, Recipes>> recipes_1, List<KeyValuePair<string, int>> sclad, List<string> sh)
 	{
 		//конструктор класса
 		this.min_interval = min_t;
@@ -43,9 +43,9 @@ public class Cafe
 		{
 			this.warehouse.Add(ingr.Key, ingr.Value);
 		}
-		foreach (KeyValuePair<string, int> ingr in sh)
+		foreach (string ingr in sh)
 		{
-			this.shop.Add(ingr.Key, ingr.Value)
+			this.shop.Add(ingr)
 		}
 
 	}
@@ -68,12 +68,12 @@ public class Cafe
 		if (amount * price <= this.money)
 		{
 			UpdateWarehouse(name, amount);
-			this.money -= amount * price
+			this.money -= amount * price;
 		}
 		else
 		{
 			UpdateWarehouse(name, (int)(this.money / price);
-			this.money -= (int)(this.money / price) * price
+			this.money -= (int)(this.money / price) * price;
 			//надо бы вывести соообщение что недостачно средств для покупки всех но я хз как лучше это сделать
 
 		}
@@ -90,30 +90,34 @@ public class Cafe
 	{
 		// если возможно то выбранный рецепт приготовляется т.е отнимаются ингредиенты которые требуются для приготовления, прибавляется к общему балансу денег цена блюда
 		string name = MakeAnOrder();
-		List<string> keyList = new List<string>(this.recipes[name].ingredients.Keys);
+		List<string> keyList = this.recipes[name].ingredients;
+		List<string> missing_ingredients = new List<string>();
 		bool Is_Possible = true;
 		foreach(string ingredient in keyList)
 		{
-			if (this.recipes[name].ingresients[ingredient] > this.warehouse[ingredient])
+			if (this.warehouse[ingredient])
 			{
 				Is_Possible = false;
-				break;
-
+				missing_ingredients.Add(ingredient);
 			}
 		}
 		if(Is_Possible)
 		{
 			foreach(string ingredient in keyList)
 			{
-				this.warehouse[ingredient] -= this.recipes[name].ingresients[ingredient];
+				this.warehouse[ingredient] -= 1;
 			}
 			money += this.recipes[name].price;
 			//что со временем приготовления делать хз
 		}
-		else:
+		else
 		{
+			foreach(string ingredient in missing_ingredients)
+			{
+				//вывод ингредиентов
+			}
 			// надо вывести что невозможно приготовить блюдо
-			//?? надо ли выводить каких ингредиентов не хватает ??
+			
 		}
 	}
 	void UpdateTimeInterval(int min, int max)
