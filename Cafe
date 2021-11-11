@@ -95,7 +95,7 @@ public class Cafe
 		bool Is_Possible = true;
 		foreach(string ingredient in keyList)
 		{
-			if (!this.warehouse[ingredient])
+			if (this.warehouse[ingredient] == 0)
 			{
 				Is_Possible = false;
 				missing_ingredients.Add(ingredient);
