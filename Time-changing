@@ -6,14 +6,12 @@ using UnityEngine;
 
 public enum DayCycles // Enum with day and night cycles, you can change or modify with whatever you want
 {
-    Midnight = 0;
-    Sunrise = 1;
+    Midnight = 0,
+    Sunrise = 1,
     Morning = 2,
     Day = 3,
     Sunset = 4,
-    Night = 5,
-
-
+    Night = 5
 }
 
 
@@ -59,7 +57,7 @@ public class DayNightSystem2D : MonoBehaviour
         cycleCurrentTime = DateTime.Now.Hour;
         temp = (int)(cycleCurrentTime / 4);
         dayCycle = DayCycles.Midnight + temp;
-        string Daytime = (string)(DayCycles.Midnight + temp);
+        string Daytime = (string)(dayCycle);
         globalLight.color = Daytime.ToLower();
 
     }
