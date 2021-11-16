@@ -53,41 +53,16 @@ public class DayNightSystem2D : MonoBehaviour
     [Tooltip("Objects to turn on and off based on day night cycles, you can use this example for create some custom stuffs")]
     public UnityEngine.Rendering.Universal.Light2D[] mapLights; // enable/disable in day/night states
 
+
     void Start() 
     {
-        if (cycleCurrentTime >= 0 && cycleCurrentTime < 4)
-		{
-            dayCycle = DayCycles.Midnight;
-            globalLight.color = midnight;
-        }
-        else if (cycleCurrentTime >= 4 && cycleCurrentTime < 8)
-        {
-            dayCycle = DayCycles.Sunrise; // start with sunrise state
-            globalLight.color = sunrise; // start global color at sunrise
-        }
-        else if (cycleCurrentTime >= 8 && cycleCurrentTime < 12)
-		{
-            dayCycle = DayCycles.Morning; 
-            globalLight.color = morning;
-        }
-        else if (cycleCurrentTime >= 12 && cycleCurrentTime < 16)
-		{
-            dayCycle = DayCycles.Day; 
-            globalLight.color = day; 
-        }
-        else if (cycleCurrentTime >= 16 && cycleCurrentTime < 20)
-		{
-            dayCycle = DayCycles.Sunset; 
-            globalLight.color = sunset; 
-        }
-		else
-		{
-            dayCycle = DayCycles.Night;
-            globalLight.color = night;
-
-        }
-         
+        temp = (int)(cycleCurrentTime / 4);
+        dayCycle = DayCycles.Midnight + temp;
+        string Daytime = (string)(DayCycles.Midnight + temp);
+        globalLight.color = Daytime.ToLower();
     }
+         
+   
 
      void Update()
      {
