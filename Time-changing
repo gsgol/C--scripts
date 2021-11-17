@@ -11,40 +11,42 @@ public enum DayCycles // Enum with day and night cycles, you can change or modif
     Morning = 2,
     Day = 3,
     Sunset = 4,
-    Night = 5
+    Night = 5,
+
+
 }
 
 
 public class DayNightSystem2D : MonoBehaviour
 {
     [Header("Controllers")]
-    
+
     [Tooltip("Global light 2D component, we need to use this object to place light in all map objects")]
     public UnityEngine.Rendering.Universal.Light2D globalLight; // global light
-    
+
     [Tooltip("This is a current cycle time, you can change for private float but we keep public only for debug")]
-    public int cycleCurrentTime = 0; // current cycle time
+    public int cycleCurrentTime; // current cycle time
 
 
     [Tooltip("Enum with multiple day cycles to change over time, you can add more types and modify whatever you want to fits on your project")]
     public DayCycles dayCycle = DayCycles.Sunrise; // default cycle
 
     [Header("Cycle Colors")]
-    
+
     [Tooltip("Sunrise color, you can adjust based on best color for this cycle")]
     public Color sunrise; // Eg: 4:00 at 8:00
 
     public Color morning; // Eg: 8:00 at 12:00
-    
+
     [Tooltip("(Mid) Day color, you can adjust based on best color for this cycle")]
     public Color day; // Eg: 12:00 at 16:00
-    
+
     [Tooltip("Sunset color, you can adjust based on best color for this cycle")]
     public Color sunset; // Eg: 16:00 20:00
-    
+
     [Tooltip("Night color, you can adjust based on best color for this cycle")]
     public Color night; // Eg: 20:00 at 00:00
-    
+
     [Tooltip("Midnight color, you can adjust based on best color for this cycle")]
     public Color midnight; // Eg: 00:00 at 04:00
 
@@ -52,33 +54,54 @@ public class DayNightSystem2D : MonoBehaviour
     [Tooltip("Objects to turn on and off based on day night cycles, you can use this example for create some custom stuffs")]
     public UnityEngine.Rendering.Universal.Light2D[] mapLights; // enable/disable in day/night states
 
-    void Start() 
+    void Start()
     {
-        cycleCurrentTime = DateTime.Now.Hour;
-        temp = (int)(cycleCurrentTime / 4);
+        cycleCurrentTime = System.DateTime.Now.Hour;
+        int temp = (int)(cycleCurrentTime / 4);
         dayCycle = DayCycles.Midnight + temp;
-        string Daytime = (string)(dayCycle);
-        globalLight.color = Daytime.ToLower();
+        int Daytime = (int)DayCycles.Midnight + temp;
+        print(Daytime);
+        switch(Daytime)
+        {
+            case 0:
+                globalLight.color = midnight;
+                break;
+            case 1:
+                globalLight.color = sunrise;
+                break;
+            case 2:
+                globalLight.color = morning;
+                break;
+            case 3:
+                globalLight.color = day;
+                break;
+            case 4:
+                globalLight.color = sunset;
+                break;
+            case 5:
+                globalLight.color = night;
+                break;
+        }
 
     }
 
-     void Update()
-     {
+    void Update()
+    {
         // Update cycle time
-        cycleCurrentTime = DateTime.Now.Hour;
+        cycleCurrentTime = System.DateTime.Now.Hour;
 
         // Check if cycle time reach cycle duration time
-        if (cycleCurrentTime % 4 == 0) 
+        if (cycleCurrentTime % 4 == 0)
         {
-            dayCycle = (dayCycle + 1) % 6; // change cycle state
+            dayCycle = (DayCycles)(((int)dayCycle + 1) % 6); // change cycle state
         }
-
+    
 
         // percent it's an value between current and max time to make a color lerp smooth
         float percent = (cycleCurrentTime % 4) / 4;
 
         // Sunrise state (you can do a lot of stuff based on every cycle state, like enable animals only in sunrise )
-        if(dayCycle == DayCycles.Sunrise)
+        if (dayCycle == DayCycles.Sunrise)
         {
             ControlLightMaps(false); // disable map light (keep enable only at night)
             globalLight.color = Color.Lerp(sunrise, morning, percent);
@@ -102,10 +125,10 @@ public class DayNightSystem2D : MonoBehaviour
         }
 
         // Night state
-        if(dayCycle == DayCycles.Night)
+        if (dayCycle == DayCycles.Night)
         {
             ControlLightMaps(true); // enable map lights (disable only in day states)
-            globalLight.color = Color.Lerp(night, midnight, percent);        
+            globalLight.color = Color.Lerp(night, midnight, percent);
         }
 
         // Midnight state
@@ -113,13 +136,13 @@ public class DayNightSystem2D : MonoBehaviour
         {
             globalLight.color = Color.Lerp(midnight, day, percent);
         }
-     }
+    }
 
-     void ControlLightMaps(bool status)
-     {
-         // loop in light array of objects to enable/disable
-         if(mapLights.Length > 0)
-            foreach(UnityEngine.Rendering.Universal.Light2D _light in mapLights)
+    void ControlLightMaps(bool status)
+    {
+        // loop in light array of objects to enable/disable
+        if (mapLights.Length > 0)
+            foreach (UnityEngine.Rendering.Universal.Light2D _light in mapLights)
                 _light.gameObject.SetActive(status);
-     }
+    }
 }
