@@ -8,12 +8,13 @@ using UnityEngine.UI;
 public class Cafe : MonoBehaviour
 {
 
-	int min_interval;
-	int max_interval;
-	int money;
-	public Dictionary<string, Recipe> recipes;
-	public Dictionary<string, int> warehouse;
-	public Dictionary<string, int> shop;
+	public static int min_interval;
+	public static int max_interval;
+	public static int money;
+	public static Dictionary<string, Recipe> recipes;
+	public static Dictionary<string, int> warehouse;
+	public static Dictionary<string, int> shop;
+	public static Dictionary<string, int> preparedOrders;
 
 	public class Recipe
 	{
@@ -38,18 +39,18 @@ public class Cafe : MonoBehaviour
 	{
 		// добавление на склад определенного кол-ва ингредиентов если такого ингредиента нет в словаре он создается
 		int available;
-		if (this.warehouse.TryGetValue(name, out available))
+		if (warehouse.TryGetValue(name, out available))
 		{
-			this.warehouse[name] += amount;
+			warehouse[name] += amount;
 		}
 		else
 		{
-			this.warehouse.Add(name, amount);
+			warehouse.Add(name, amount);
 		}
 	}
 	public int isInWarehouse(string name)
     {
-		return this.warehouse[name];
+		return warehouse[name];
 	}
 	public void checkWarehouse()
 	{
@@ -84,16 +85,16 @@ public class Cafe : MonoBehaviour
 	{
 		// покупка определенного числа ингредиентов надо сделать чтобы пользователь сам вводил сколько он хочет купить продуктов
 		// если пользователь пытается купить продуктов больше чем может то покупка совершается только на  то число которое может себе позволить пользователь
-		if (amount * price <= this.money)
+		if (amount * price <= money)
 		{
 			UpdateWarehouse(name, amount);
-			this.money -= amount * price;
-			GameObject.Find("WalletCoins").GetComponent<Text>().text = this.money.ToString();
+			money -= amount * price;
+			GameObject.Find("WalletCoins").GetComponent<Text>().text = money.ToString();
 		}
 		else
 		{
-			UpdateWarehouse(name,(int)(this.money / price));
-			this.money -= (int)(this.money / price) * price;
+			UpdateWarehouse(name,(int)(money / price));
+			money -= (int)(money / price) * price;
 			//надо бы вывести соообщение что недостачно средств для покупки всех но я хз как лучше это сделать
 		}
 	}
@@ -124,11 +125,9 @@ public class Cafe : MonoBehaviour
 	}
 	string MakeAnOrder()
 	{
-		// выбирается 1 из рецептов из словаря
-		List<string> keyList = new List<string>(this.recipes.Keys);
+		List<string> keyList = new List<string>(recipes.Keys);
 		System.Random rnd = new System.Random();
 		return keyList[rnd.Next(keyList.Count)];
-	
 	}
 
 	public void PrepareAnOrder(string name)
@@ -136,36 +135,73 @@ public class Cafe : MonoBehaviour
 
 		if(GameObject.Find(String.Format("cookButton {0}", name)).GetComponent<BoxCollider2D>().enabled == true)
         {
-			List<string> keyList = this.recipes[name].ingredients;
+			List<string> keyList = recipes[name].ingredients;
 			foreach (string ingredient in keyList)
 			{
-				print(ingredient);
-				this.warehouse[ingredient] -= 1;
+				warehouse[ingredient] -= 1;
 			}
 
 			StartCoroutine(ExampleCoroutine());
 			System.Collections.IEnumerator ExampleCoroutine()
 			{
 				GameObject smoke = GameObject.Find("cookingSmoke");
-				smoke.GetComponent<Renderer>().enabled = true;
-				print(1);
+				ParticleSystem ps = smoke.GetComponent<ParticleSystem>();
+				ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+				var main = ps.main;
+				main.duration = recipes[name].preparationTime;
+				ps.Play();
+				
+				yield return new WaitForSecondsRealtime(recipes[name].preparationTime);
 
-				yield return new WaitForSecondsRealtime(this.recipes[name].preparationTime);
-
-				print(2);
-				smoke.GetComponent<Renderer>().enabled = false;
-
-				money += this.recipes[name].price;
-				GameObject.Find("WalletCoins").GetComponent<Text>().text = this.money.ToString();
+				if (preparedOrders.ContainsKey(name))
+					preparedOrders[name] += 1;
+				else
+					preparedOrders.Add(name, 1);
 			}
 		}
         else
         {
-			//globalLight.color = Color.Lerp(sunrise, morning, percent)
-
+			List<string> keyList = recipes[name].ingredients;
+			Transform materials = GameObject.Find(String.Format("recipeBlock {0}", name)).transform.Find("materials");
+			foreach (string ingredient in keyList)
+			{
+                if (isInWarehouse(ingredient) == 0)
+                {
+					Text materialText = materials.Find(String.Format("material {0}", ingredient)).transform.Find("materialName").GetComponent<Text>();
+					StartCoroutine(NoMaterialNotify(materialText.color, Color.red, materialText));
+				}
+				
+			}
 		}
 	}
+    System.Collections.IEnumerator NoMaterialNotify(Color startColor, Color endColor, Text text)   /// вынести в отдельный скрипт
+	{
+		float duration = 0.5f; 
+		float smoothness = 0.02f; 
+		float progress = 0; 
+		float increment = smoothness / duration;
 
+		bool dirRight = true;
+		float speed = 0.5f;
+		float startX = text.transform.position.x;
+		while (progress < 0.5f)
+		{
+			text.color = Color.Lerp(startColor, endColor, progress);
+			progress += increment;
+			
+			text.transform.Translate((dirRight?1:-1) * Vector2.right * speed);
+			dirRight = (text.transform.position.x < startX + 1 && text.transform.position.x > startX - 1) ? dirRight : !dirRight;
+
+			yield return new WaitForSeconds(smoothness);
+		}
+		while (progress < 1)
+		{
+			text.color = Color.Lerp(endColor, startColor, progress);
+			progress += increment;
+
+			yield return new WaitForSeconds(smoothness);
+		}
+	}
 	public void StartClients()
     {
 		StartCoroutine(ClientsCoroutine());
@@ -184,62 +220,51 @@ public class Cafe : MonoBehaviour
 	}
 	public void newClientStream()  // поток клиентов (пока просто отобржате чела и заказ)
     {
-		GameObject client = GameObject.Find("client");  // сделать создание gameobject с рандомным спрайтом и тд
-		client.GetComponent<Renderer>().enabled = true;  //сделать анимацию прихода клиента с одной из сторон
+		GameObject newClient = GameObject.Find("client");  // сделать создание gameobject с рандомным спрайтом и тд
+		newClient.GetComponent<Renderer>().enabled = true;  //сделать анимацию прихода клиента с одной из сторон
 		string order = MakeAnOrder();
+		client c = newClient.AddComponent<client>();
+		c.Order = order; 
+		c.createOrderImage(order);
 
-
-		/////////////вынести в отдельный метод
-		GameObject imgObject = new GameObject("order");
-		imgObject.transform.SetParent(GameObject.Find("Canvas").transform);
-		imgObject.transform.SetSiblingIndex(0);
-
-		imgObject.AddComponent<CanvasRenderer>();
-		RectTransform trans = imgObject.AddComponent<RectTransform>();
-		trans.localScale = Vector3.one;
-		trans.anchoredPosition = new Vector2(195.4f, 26.7f); // setting position
-		trans.sizeDelta = new Vector2(32, 32); // custom size
-
-		Image image = imgObject.AddComponent<Image>();
-		Texture2D tex = Resources.Load<Texture2D>(String.Format("recipes/{0}", order));
-		image.sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
-		/////////////////////
 	}
 	void UpdateTimeInterval(int min, int max)
 	{
 		// изменяем максимальный и минимальный интервал между посетителями 
-		this.max_interval = max;
-		this.min_interval = min;
+		max_interval = max;
+		min_interval = min;
 	}
 
 	public int getMaterialPrice(string name)
     {
-		return this.shop[name];
+		return shop[name];
     }
+
+
 
 	void Start()
 	{
-		this.min_interval = 2 * 60;
-		this.max_interval = 20 * 60;
-		this.money = int.Parse(GameObject.Find("WalletCoins").GetComponent<Text>().text);
-		this.warehouse = new Dictionary<string, int> {
+		min_interval = 2 * 60;
+		max_interval = 20 * 60;
+		money = int.Parse(GameObject.Find("WalletCoins").GetComponent<Text>().text);
+		warehouse = new Dictionary<string, int> {   // сделать чтением и записью в playerPrefs
 				{ "Soy Sauce", 0 },
 				{ "Cabbage", 0 },
-				{ "Salt", 0}
+				{ "Salt", 2}
 		};
 
-		using (StreamReader r = new StreamReader("Assets/DB/materials.json"))
-		{
-			string json = r.ReadToEnd();
-			this.shop = JsonConvert.DeserializeObject<Dictionary<string, int>>(json);
+		TextAsset jsonMaterials = Resources.Load<TextAsset>("DB/materials");
+		shop = JsonConvert.DeserializeObject<Dictionary<string, int>>(jsonMaterials.text);
 
-		}
+		TextAsset jsonRecipes = Resources.Load<TextAsset>("DB/recipes");
+		recipes = JsonConvert.DeserializeObject<Dictionary<string, Recipe>>(jsonRecipes.text);	
 
-		using (StreamReader r = new StreamReader("Assets/DB/recipes.json"))
-		{
-			string json = r.ReadToEnd();
-			this.recipes = JsonConvert.DeserializeObject<Dictionary<string, Recipe>>(json);
-		}
+		preparedOrders = new Dictionary<string, int> {  //тоже в playerPrefs, со сроком годности подумать
+				{ "Ramen", 0 },
+				{ "Miso ramen", 0 }
+		};
+
+
 
 		StartClients();
 
