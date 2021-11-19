@@ -50,7 +50,8 @@ public class DayNightSystem2D : MonoBehaviour
     void Start()
     {
         Set_Daycycle();
-        float time_div = (10 - (DateTime.Now.Minute % 10)) * 60 + (60 - DateTime.Now.Second) * 1.0;
+        Circle_Movement();
+        time_div = (10 - (DateTime.Now.Minute % 10)) * 60 + (60 - DateTime.Now.Second) * 1.0;
         InvokeRepeating("Circle_Movement", time_div, 600.0f);
     }
 
@@ -117,22 +118,18 @@ public class DayNightSystem2D : MonoBehaviour
         if (cycleCurrentTime >= 6 && cycleCurrentTime < 10)
         {
             dayCycle = DayCycles.Morning;
-            globalLight.color = morning;
         }
         else if (cycleCurrentTime >= 10 && cycleCurrentTime < 18)
         {
             dayCycle = DayCycles.Day;
-            globalLight.color = day;
         }
         else if (cycleCurrentTime >= 18 && cycleCurrentTime < 22)
         {
             dayCycle = DayCycles.Evening;
-            globalLight.color = evening;
         }
         else
         {
             dayCycle = DayCycles.Night;
-            globalLight.color = night;
 
         }
     }
