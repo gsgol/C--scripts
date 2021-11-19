@@ -202,32 +202,40 @@ public class Cafe : MonoBehaviour
 			yield return new WaitForSeconds(smoothness);
 		}
 	}
-	public void StartClients()
+	public void SummonClient()
     {
 		StartCoroutine(ClientsCoroutine());
-		System.Collections.IEnumerator ClientsCoroutine()
-		{
-            System.Random r = new System.Random();
-			//int firstClient = r.Next(30, this.min_interval);
-			int firstClient = r.Next(3, 10);
-
-			yield return new WaitForSecondsRealtime(firstClient);
-
-			newClientStream();
-			//newClientStream();
-
-		}
 	}
-	public void newClientStream()  // поток клиентов (пока просто отобржате чела и заказ)
+
+	public System.Collections.IEnumerator ClientsCoroutine()
+	{
+		System.Random r = new System.Random();
+		//int firstClient = r.Next(30, this.min_interval);
+		int clientTime = r.Next(3, 10);
+		print("new client in " + clientTime);
+		yield return new WaitForSecondsRealtime(clientTime);
+
+		newClient();
+
+	}
+	public void newClient() 
     {
-		GameObject newClient = GameObject.Find("client");  // сделать создание gameobject с рандомным спрайтом и тд
-		newClient.GetComponent<Renderer>().enabled = true;  //сделать анимацию прихода клиента с одной из сторон
+		System.Random r = new System.Random();
+		int clientSprite = r.Next(1, 3); //количество спрайтов клиентов на выбор (правая граница больше на 1)
+		print("sprite " + clientSprite);
+		int side = r.Next(0, 1);
+		if (GameObject.Find(string.Format("client{0}", side)) != null) //если клиент уже есть 
+			side = (side==0)?1:0;
+
+		GameObject c = client.createClientSprite(side * 3, clientSprite);
+		client clientClass = c.GetComponent<client>();
 		string order = MakeAnOrder();
-		client c = newClient.AddComponent<client>();
-		c.Order = order; 
-		c.createOrderImage(order);
+		clientClass.Order = order;
+		clientClass.createOrderImage(order, side);
 
 	}
+
+
 	void UpdateTimeInterval(int min, int max)
 	{
 		// изменяем максимальный и минимальный интервал между посетителями 
@@ -266,7 +274,8 @@ public class Cafe : MonoBehaviour
 
 
 
-		StartClients();
+		SummonClient();
+		SummonClient();
 
 
 	}
