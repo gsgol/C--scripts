@@ -6,14 +6,10 @@ using UnityEngine;
 
 public enum DayCycles // Enum with day and night cycles, you can change or modify with whatever you want
 {
-    Midnight = 0,
-    Sunrise = 1,
-    Morning = 2,
-    Day = 3,
-    Sunset = 4,
-    Night = 5,
-
-
+    Morning = 0,
+    Day = 1,
+    Evening = 2,
+    Night = 3
 }
 
 
@@ -33,22 +29,19 @@ public class DayNightSystem2D : MonoBehaviour
 
     [Header("Cycle Colors")]
 
-    [Tooltip("Sunrise color, you can adjust based on best color for this cycle")]
-    public Color sunrise; // Eg: 4:00 at 8:00
 
-    public Color morning; // Eg: 8:00 at 12:00
+    public Color morning; // Eg: 6:00 at 10:00
 
     [Tooltip("(Mid) Day color, you can adjust based on best color for this cycle")]
-    public Color day; // Eg: 12:00 at 16:00
+    public Color day; // Eg: 10:00 at 18:00
 
     [Tooltip("Sunset color, you can adjust based on best color for this cycle")]
-    public Color sunset; // Eg: 16:00 20:00
+    public Color evening; // Eg: 18:00 22:00
 
     [Tooltip("Night color, you can adjust based on best color for this cycle")]
-    public Color night; // Eg: 20:00 at 00:00
+    public Color night; // Eg: 22:00 at 06:00
 
-    [Tooltip("Midnight color, you can adjust based on best color for this cycle")]
-    public Color midnight; // Eg: 00:00 at 04:00
+
 
     [Header("Objects")]
     [Tooltip("Objects to turn on and off based on day night cycles, you can use this example for create some custom stuffs")]
@@ -56,72 +49,48 @@ public class DayNightSystem2D : MonoBehaviour
 
     void Start()
     {
-        cycleCurrentTime = System.DateTime.Now.Hour;
-        int temp = (int)(cycleCurrentTime / 4);
-        dayCycle = DayCycles.Midnight + temp;
-        int Daytime = (int)DayCycles.Midnight + temp;
-        print(Daytime);
-        switch(Daytime)
-        {
-            case 0:
-                globalLight.color = midnight;
-                break;
-            case 1:
-                globalLight.color = sunrise;
-                break;
-            case 2:
-                globalLight.color = morning;
-                break;
-            case 3:
-                globalLight.color = day;
-                break;
-            case 4:
-                globalLight.color = sunset;
-                break;
-            case 5:
-                globalLight.color = night;
-                break;
-        }
-
+        Set_Daycycle();
+        float time_div = (10 - (DateTime.Now.Minute % 10)) * 60 + (60 - DateTime.Now.Second) * 1.0;
+        InvokeRepeating("Circle_Movement", time_div, 600.0f);
     }
 
-    void Update()
+    void Circle_Movement()
     {
         // Update cycle time
-        cycleCurrentTime = System.DateTime.Now.Hour;
+        Set_Daycycle();
 
-        // Check if cycle time reach cycle duration time
-        if (cycleCurrentTime % 4 == 0)
+        float max = 1.0, curr = 1.0;
+
+        if (dayCycle == DayCycles.Day && dayCycle == DayCycles.Night)
         {
-            dayCycle = (DayCycles)(((int)dayCycle + 1) % 6); // change cycle state
+            max = 28800.0;
         }
-    
-
+        else
+        {
+            max = 14400.0;
+        }
+        curr = Set_Interval();
+        
         // percent it's an value between current and max time to make a color lerp smooth
-        float percent = (cycleCurrentTime % 4) / 4;
+        float percent = curr / max;
 
         // Sunrise state (you can do a lot of stuff based on every cycle state, like enable animals only in sunrise )
-        if (dayCycle == DayCycles.Sunrise)
-        {
-            ControlLightMaps(false); // disable map light (keep enable only at night)
-            globalLight.color = Color.Lerp(sunrise, morning, percent);
-        }
-
         if (dayCycle == DayCycles.Morning)
         {
+            ControlLightMaps(false); // disable map light (keep enable only at night)
             globalLight.color = Color.Lerp(morning, day, percent);
         }
 
         // Mid Day state
         if (dayCycle == DayCycles.Day)
         {
-            globalLight.color = Color.Lerp(day, sunset, percent);
+            globalLight.color = Color.Lerp(day, evening, percent);
         }
 
         // Sunset state
-        if (dayCycle == DayCycles.Sunset)
+        if (dayCycle == DayCycles.Evening)
         {
-            globalLight.color = Color.Lerp(sunset, night, percent);
+            globalLight.color = Color.Lerp(evening, night, percent);
         }
 
         // Night state
@@ -130,19 +99,75 @@ public class DayNightSystem2D : MonoBehaviour
             ControlLightMaps(true); // enable map lights (disable only in day states)
             globalLight.color = Color.Lerp(night, midnight, percent);
         }
-
-        // Midnight state
-        if (dayCycle == DayCycles.Midnight)
-        {
-            globalLight.color = Color.Lerp(midnight, day, percent);
-        }
     }
 
     void ControlLightMaps(bool status)
     {
         // loop in light array of objects to enable/disable
         if (mapLights.Length > 0)
-            foreach (UnityEngine.Rendering.Universal.Light2D _light in mapLights)
-                _light.gameObject.SetActive(status);
+            foreach(UnityEngine.Rendering.Universal.Light2D _light in mapLights)
+            _light.gameObject.SetActive(status);
+    }
+
+
+    void Set_Daycycle()
+    {
+        cycleCurrentTime = DateTime.Now.Hour;
+
+        if (cycleCurrentTime >= 6 && cycleCurrentTime < 10)
+        {
+            dayCycle = DayCycles.Morning;
+            globalLight.color = morning;
+        }
+        else if (cycleCurrentTime >= 10 && cycleCurrentTime < 18)
+        {
+            dayCycle = DayCycles.Day;
+            globalLight.color = day;
+        }
+        else if (cycleCurrentTime >= 18 && cycleCurrentTime < 22)
+        {
+            dayCycle = DayCycles.Evening;
+            globalLight.color = evening;
+        }
+        else
+        {
+            dayCycle = DayCycles.Night;
+            globalLight.color = night;
+
+        }
+    }
+
+
+    float Set_Interval()
+    {
+        int hour = DateTime.Now.Hour;
+        int minute = DateTime.Now.Minute;
+        float ans = 1;
+        if (dayCycle == DayCycles.Night)
+        {
+            if (hour < 6)
+            {
+                ans = (hour + 2) * 3600.0 + minute * 60;
+            }
+            else
+            {
+                ans = (hour - 22) * 3600.0 + minute * 60;
+            }
+
+        }
+        else if (dayCycle == DayCycles.Day)
+        {
+            ans = (hour - 10) * 3600.0 + minute * 60;
+        }
+        else if (dayCycle == DayCycles.Morning)
+        {
+            ans = (hour - 6) * 3600.0 + minute * 60;
+        }
+        else
+        {
+            ans = (hour - 18) * 3600.0 + minute * 60;
+        }
+
+        return ans;
     }
 }
