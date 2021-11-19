@@ -62,7 +62,7 @@ public class DayNightSystem2D : MonoBehaviour
 
         float max = 1.0f, curr = 1.0f;
 
-        if (dayCycle == DayCycles.Day && dayCycle == DayCycles.Night)
+        if (dayCycle == DayCycles.Day || dayCycle == DayCycles.Night)
         {
             max = 28800.0f;
         }
