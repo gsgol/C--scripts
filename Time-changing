@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 
 
@@ -49,7 +50,6 @@ public class DayNightSystem2D : MonoBehaviour
 
     void Start()
     {
-        Set_Daycycle();
         Circle_Movement();
         time_div = (10 - (DateTime.Now.Minute % 10)) * 60 + (60 - DateTime.Now.Second) * 1.0;
         InvokeRepeating("Circle_Movement", time_div, 600.0f);
@@ -139,30 +139,30 @@ public class DayNightSystem2D : MonoBehaviour
     {
         int hour = DateTime.Now.Hour;
         int minute = DateTime.Now.Minute;
-        float ans = 1;
+        float ans = 1.0f;
         if (dayCycle == DayCycles.Night)
         {
             if (hour < 6)
             {
-                ans = (hour + 2) * 3600.0 + minute * 60;
+                ans = (hour + 2) * 3600.0f + minute * 60;
             }
             else
             {
-                ans = (hour - 22) * 3600.0 + minute * 60;
+                ans = (hour - 22) * 3600.0f + minute * 60;
             }
 
         }
         else if (dayCycle == DayCycles.Day)
         {
-            ans = (hour - 10) * 3600.0 + minute * 60;
+            ans = (hour - 10) * 3600.0f + minute * 60;
         }
         else if (dayCycle == DayCycles.Morning)
         {
-            ans = (hour - 6) * 3600.0 + minute * 60;
+            ans = (hour - 6) * 3600.0f + minute * 60;
         }
         else
         {
-            ans = (hour - 18) * 3600.0 + minute * 60;
+            ans = (hour - 18) * 3600.0f + minute * 60;
         }
 
         return ans;
