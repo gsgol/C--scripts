@@ -22,11 +22,11 @@ public class DayNightSystem2D : MonoBehaviour
     public UnityEngine.Rendering.Universal.Light2D globalLight; // global light
 
     [Tooltip("This is a current cycle time, you can change for private float but we keep public only for debug")]
-    public int cycleCurrentTime; // current cycle time
+    private int cycleCurrentTime; // current cycle time
 
 
     [Tooltip("Enum with multiple day cycles to change over time, you can add more types and modify whatever you want to fits on your project")]
-    public DayCycles dayCycle = DayCycles.Sunrise; // default cycle
+    public DayCycles dayCycle = DayCycles.Morning; // default cycle
 
     [Header("Cycle Colors")]
 
@@ -51,7 +51,7 @@ public class DayNightSystem2D : MonoBehaviour
     void Start()
     {
         Circle_Movement();
-        time_div = (10 - (DateTime.Now.Minute % 10)) * 60 + (60 - DateTime.Now.Second) * 1.0;
+        float time_div = (10 - (DateTime.Now.Minute % 10)) * 60 + (60 - DateTime.Now.Second) * 1.0f;
         InvokeRepeating("Circle_Movement", time_div, 600.0f);
     }
 
@@ -71,7 +71,7 @@ public class DayNightSystem2D : MonoBehaviour
             max = 14400.0f;
         }
         curr = Set_Interval();
-        
+
         // percent it's an value between current and max time to make a color lerp smooth
         float percent = curr / max;
 
@@ -98,7 +98,7 @@ public class DayNightSystem2D : MonoBehaviour
         if (dayCycle == DayCycles.Night)
         {
             ControlLightMaps(true); // enable map lights (disable only in day states)
-            globalLight.color = Color.Lerp(night, midnight, percent);
+            globalLight.color = Color.Lerp(night, morning, percent);
         }
     }
 
@@ -106,8 +106,8 @@ public class DayNightSystem2D : MonoBehaviour
     {
         // loop in light array of objects to enable/disable
         if (mapLights.Length > 0)
-            foreach(UnityEngine.Rendering.Universal.Light2D _light in mapLights)
-            _light.gameObject.SetActive(status);
+            foreach (UnityEngine.Rendering.Universal.Light2D _light in mapLights)
+                _light.gameObject.SetActive(status);
     }
 
 
